@@ -40,3 +40,13 @@ This is a demo project for exploring and predicting housing prices in California
 - This project is a **demo**, no custom domain purchased
 - Frontend/backend separation is intentional to simplify deployment
 - Focus is on ML + cloud deployment demonstration
+
+---
+
+## Photos
+
+<img width="1262" height="835" alt="Ekran görüntüsü 2026-01-15 225452" src="https://github.com/user-attachments/assets/57d21555-d848-4cbe-ae87-fb3d61ec8e23" />
+<img width="1262" height="537" alt="Ekran görüntüsü 2026-01-15 225519" src="https://github.com/user-attachments/assets/c61cf095-6bfe-4179-805d-cf4a7a93fc0b" />
+<img width="1265" height="1241" alt="Ekran görüntüsü 2026-01-15 225537" src="https://github.com/user-attachments/assets/697da69e-0896-48b6-bb37-8bda74547573" />
+<img width="1201" height="1264" alt="Ekran görüntüsü 2026-01-15 225609" src="https://github.com/user-attachments/assets/7c967ac4-558f-4d9a-b639-cf01dce236c8" />
+<img width="1262" height="1235" alt="Ekran görüntüsü 2026-01-15 225627" src="https://github.com/user-attachments/assets/c5823824-b2e5-4c64-b964-b504d90fb874" />
