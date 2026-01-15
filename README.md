@@ -51,4 +51,5 @@ This is a demo project for exploring and predicting housing prices in California
 <img width="1265" height="1241" alt="Ekran görüntüsü 2026-01-15 225537" src="https://github.com/user-attachments/assets/697da69e-0896-48b6-bb37-8bda74547573" />
 <img width="1201" height="1264" alt="Ekran görüntüsü 2026-01-15 225609" src="https://github.com/user-attachments/assets/7c967ac4-558f-4d9a-b639-cf01dce236c8" />
 <img wid<img width="1259" height="1166" alt="Ekran görüntüsü 2026-01-15 230110" src="https://github.com/user-attachments/assets/64395c26-b788-4120-834d-1f6bd691cb37" />
-th="1262" height="1235" alt="Ekran görüntüsü 2026-01-15 225627" src="https://github.com/user-attachments/assets/c5823824-b2e5-4c64-b964-b504d90fb874" />
+<img width="1262" height="1235" alt="Ekran görüntüsü 2026-01-15 225627" src="https://github.com/user-attachments/assets/0437cdea-90bc-4a7a-9526-8e14761a5cd2" />
+
