@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>California Housing ML Dashboard</title>
+
+<!-- Plotly.js for interactive charts -->
+<script src="https://cdn.plot.ly/plotly-2.26.1.min.js"></script>
+
+<!-- MathJax CDN -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<!-- Simple CSS for layout and animations -->
+<style>
+  body { font-family: 'Segoe UI', sans-serif; margin:0; background: #f5f5f5; }
+  header { background: #2c3e50; color: white; padding: 50px 20px; text-align:center; }
+  h1 { font-size: 2.5rem; margin:0; animation: fadeIn 1.5s ease-in; }
+  p { font-size: 1.1rem; margin-top:10px; color:#ecf0f1; }
+  section { padding: 50px 20px; max-width: 1200px; margin:auto; }
+  .chart-container { margin-top: 30px; min-height: 600px; }
+  .sim-chart { margin-bottom: 40px; }
+  .feature-box { background:white; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); margin-bottom:50px; }
+  .aws-box { display:flex; align-items:center; justify-content:center; 
+background:#ff9900; padding:15px; border-radius:12px; color:white; font-weight:bold; margin-top:50px; }
+  .tooltip { font-size:0.9rem; color:#555; margin-top:5px; }
+  
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  #rotateWarning {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  color: white;
+  display: none;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.rotateBox {
+  font-size: 1.2rem;
+  padding: 30px;
+}
+
+
+  /* Prediction result visibility fix */
+  #predictedBox,
+  #realBox {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;   /* koyu lacivert */
+  }
+
+</style>
+</head>
+
+
+
+<body>
+
+<div id="rotateWarning">
+  <div class="rotateBox">
+    <p>📱 For better experience<br><strong>turn your phone horizontally</strong></p>
+  </div>
+</div>
+
+  
+
+<header>
+  <h1>California Housing Price Analysis</h1>
+  <p>
+    An interpretable machine learning analysis of housing prices using a Random Forest regression model.
+  </p>
+</header>
+
+
+
+<section>
+
+  <div class="feature-box">
+    <h2>📊 Project Overview</h2>
+
+    <p class="tooltip">
+      This project investigates the determinants of housing prices in California using a machine learning approach. 
+      The primary objective is not only to predict median house values accurately, 
+      but also to analyze and interpret how different socioeconomic and geographic features influence these predictions.
+    </p>
+
+    <p class="tooltip">
+      The study is based on the California Housing dataset and frames the problem as a supervised regression
+      task, where the target variable is the median house value of a given district. Particular emphasis is placed on
+      model interpretability and behavioral analysis, rather than treating the predictive model as a black box.
+    </p>
+
+    <p class="tooltip">
+      To achieve this, the project integrates a modern data science stack. 
+      Python is used for data preprocessing, modeling, and evaluation, 
+      while Pandas and NumPy support efficient data manipulation and numerical operations. 
+      Model training is performed using a Random Forest Regressor implemented in Scikit-Learn. 
+      The trained model is exposed through a FastAPI-based web service, served via Uvicorn, and interactive visualizations are created using Plotly. 
+      The entire system is designed with AWS infrastructure in mind to ensure scalability and deployability.
+    </p>
+
+    <p class="tooltip">
+      From a modeling perspective, the prediction model is a Random Forest Regressor—an ensemble learning method 
+      that combines multiple decision trees to reduce variance and improve generalization. 
+      Each individual tree independently estimates the median house value, 
+      and the final prediction is obtained by averaging the outputs of all trees. 
+    </p>
+
+    <p class="tooltip">
+      Formally, the model prediction can be expressed as:
+      <br>
+      $$\hat{y} = \frac{1}{T} \sum_{t=1}^{T} h_t(x)$$
+      where \(T\) denotes the number of trees in the forest and \(h_t(x)\) represents the prediction of the \(t\)-th
+      decision tree for an input feature vector \(x\).
+    </p>
+
+    <p class="tooltip">
+      Rather than focusing solely on predictive accuracy, this project further investigates how the trained model
+      allocates importance to different features, how predicted values vary across geographic regions, and how
+      the model output responds to controlled changes in individual input variables. These analyses provide
+      insights into the internal structure learned by the model and help assess its alignment with real-world housing dynamics.
+    </p>
+  </div>
+  
+
+
+  <div class="aws-box" id="awsStatus" style="cursor: pointer;">
+    ☁️ Checking AWS deployment status...
+  </div>
+
+
+
+  <div class="feature-box">
+    <h2>🏠 Test The ML Model</h2>
+
+    <label for="test-sample"><strong>Select a test sample:</strong></label>
+    <select id="test-sample"></select>
+
+    <button id="predictTestBtn" style="margin-top:15px;">Predict</button>
+
+    <div style="display:flex; gap:20px; margin-top:25px;">
+      <div class="feature-box" style="flex:1; text-align:center;">
+        <h3>Model Input (Used for Prediction)</h3>
+        <div id="modelInputBox" style="text-align:left; font-size:0.95rem;"></div>
+      </div>
+
+      <div class="feature-box" style="flex:1; text-align:center;">
+        <h3>Predicted Value</h3>
+        <p id="predictedBox">—</p>
+      </div>
+
+      <div class="feature-box" style="flex:1; text-align:center;">
+        <h3>Real Value</h3>
+        <p id="realBox">—</p>
+      </div>
+    </div>
+
+    <p class="tooltip" style="margin-top:20px;">
+      The selected test sample is taken from a held-out portion of the California Housing dataset.
+      The model predicts the median house value using a Random Forest Regressor trained on the remaining data.
+      This comparison allows direct evaluation of model generalization performance.
+    </p>
+  </div>
+
+
+
+  <div class="feature-box">
+    <h2>1️⃣ Feature Importance</h2>
+    <div id="featureImportance" class="chart-container"></div>
+    <p class="tooltip">
+        This bar chart shows how much each feature influences the predicted median house value.<br><br>
+        These importance values are computed directly from the Random Forest model using its <code>feature_importances_</code> attribute.<br>
+        Internally, for each tree in the forest, every split node contributes to the decrease in prediction error (mean squared error, MSE).<br>
+        The importance of a feature is calculated by summing the MSE decreases over all nodes where that feature was used, across all trees, and then normalizing so that the total importance sums to 1.<br><br>
+        <strong>Formally:</strong><br>
+        $$\text{Feature Importance for feature } f = 
+        \frac{\sum_{\text{trees}} \sum_{\text{nodes using } f} \Delta \text{MSE}}
+            {\sum_{\text{trees}} \sum_{\text{all nodes}} \Delta \text{MSE}}$$<br><br>
+        Categorical features like <code>ocean_proximity</code> were one-hot encoded (INLAND, &lt;1H OCEAN, NEAR BAY, NEAR OCEAN), so their influence is measured separately for each category.
+    </p>
+
+    <p class="tooltip">
+      While these importance scores provide valuable insight into the internal decision-making behavior of the
+      trained model, they should be interpreted as <em>model-based relevance measures</em> rather than direct
+      indicators of real-world causality. A feature with high importance is one that the model relies on more
+      heavily to reduce prediction error, which may be influenced by correlations with other features.
+    </p>
+
+    <p class="tooltip">
+      In particular, tree-based feature importance metrics are known to favor continuous variables and features
+      with larger variability. As a result, the reported rankings reflect how the Random Forest partitions the
+      feature space given the observed data distribution, and not necessarily the independent causal impact of
+      each feature on housing prices.
+    </p>
+
+  </div>
+
+
+
+  <div class="feature-box">
+    <h2>2️⃣ Geographic Distribution of Prices</h2>
+
+    <div id="geoMap" class="chart-container"></div>
+
+    <p class="tooltip">
+      Each dot represents a housing district in California. <br>
+      Color indicates the median house value, while marker size corresponds to population. <br>
+      Hover over a point to view detailed information.
+    </p>
+
+    <p class="tooltip">
+      This visualization presents the spatial distribution of housing prices using geographic coordinates 
+      (longitude and latitude) as the underlying axes. Each observation corresponds to a census district 
+      from the California Housing dataset. The color intensity of each marker encodes the median house value, 
+      whereas marker size is proportional to the district population.
+    </p>
+
+    <p class="tooltip">
+      By combining spatial location with socioeconomic indicators, this plot enables the identification of 
+      geographic patterns and regional clusters in housing prices. In particular, coastal proximity and urban 
+      density effects emerge naturally, providing qualitative validation of the model’s learned feature 
+      importance for longitude, latitude, and population-related variables.
+    </p>
+  </div>
+
+
+
+  <div class="feature-box">
+    <h2>3️⃣ Model Behavior Simulation</h2>
+
+    <label for="featureSelect"><strong>Select feature:</strong></label>
+    <select id="featureSelect">
+      <option value="median_income">Median Income</option>
+      <option value="housing_median_age">Housing Median Age</option>
+      <option value="population">Population</option>
+      <option value="total_rooms">Total Rooms</option>
+      <option value="longitude">Longitude</option>
+      <option value="latitude">Latitude</option>
+    </select>
+
+    <div id="simulationPlot" class="chart-container"></div>
+
+    <p class="tooltip">
+      This plot shows how the trained Random Forest model responds when a single feature is varied
+      while all other features are held constant at their average values.
+    </p>
+
+    <p class="tooltip">
+      These simulation curves are obtained by programmatically querying the trained Random Forest model via a FastAPI-based inference endpoint.
+      For each feature, predictions are generated by varying that feature across a robust range (5th–95th percentile) 
+      while holding all other input variables constant at their empirical mean values derived from the training data.
+      This analysis provides an interpretable approximation of the model's marginal behavior with respect to individual features.
+    </p>
+  </div>
+
+
+
+  <div class="feature-box">
+    <h2>4️⃣ Conclusion</h2>
+    <p class="tooltip">
+      The results show that the Random Forest model captures meaningful socioeconomic and geographic
+      patterns in housing prices. Feature importance and controlled simulations provide interpretability,
+      while spatial visualizations reveal regional price structures learned by the model.
+    </p>
+  </div>
+
+
+
+<script>
+const API_BASE = "http://13.218.169.155";
+
+
+// 1️⃣ Feature Importance Data (precomputed from model)
+fetch(`${API_BASE}/feature-importance`)
+  .then(res => res.json())
+  .then(data => {
+    const trace = {
+      x: data.features,
+      y: data.importances,
+      type: 'bar',
+      marker: { color: 'rgb(52, 152, 219)' }
+    };
+    Plotly.newPlot('featureImportance', [trace], { title: 'Feature Importance', margin: { t: 40 }}, { displayModeBar: false });
+  });
+
+
+
+// 2️⃣ Geographic Distribution of Prices
+fetch(`${API_BASE}/static/housing_data.json`)
+  .then(r => r.json())
+  .then(data => {
+
+    const trace = {
+      x: data.lon,
+      y: data.lat,
+      mode: "markers",
+      type: "scatter",
+      marker: {
+        size: data.population.map(p => Math.sqrt(p) / 2),
+        sizemode: "area",
+        color: data.price,
+        colorscale: "Jet",
+        showscale: true,
+        opacity: 0.6
+      },
+      text: data.lon.map((_, i) =>
+        `<br>
+         Longitude: ${data.lon[i]}<br>
+         Latitude: ${data.lat[i]}<br>
+         Population: ${data.population[i]}<br>
+         Price: $${data.price[i]}`
+      ),
+      hoverinfo: "text"
+    };
+
+    const layout = {
+      title: "Geographic Distribution of California Housing Prices",
+      height: 1100,
+      hovermode: "closest",
+      xaxis: { title: "Longitude" },
+      yaxis: {
+        title: "Latitude",
+        scaleanchor: "x",
+        scaleratio: 1
+      },
+      margin: { l: 60, r: 40, t: 60, b: 60 }
+    };
+
+    Plotly.newPlot("geoMap", [trace], layout, { displayModeBar: false });
+  });
+
+
+
+// 3️⃣ Model Behavior Simulation</h2>
+function loadSimulation(feature) {
+  fetch(`${API_BASE}/simulate?feature=${feature}`)
+    .then(r => r.json())
+    .then(data => {
+
+      if (data.error) {
+        document.getElementById("simulationPlot").innerHTML =
+          `<p>${data.error}</p>`;
+        return;
+      }
+
+      const trace = {
+        x: data.simulation.map(d => d.feature_value),
+        y: data.simulation.map(d => d.predicted_price),
+        mode: "lines+markers",
+        type: "scatter"
+      };
+
+      Plotly.newPlot(
+        "simulationPlot",
+        [trace],
+        {
+          title: `Effect of ${feature} on Predicted Price`,
+          xaxis: { title: feature },
+          yaxis: { title: "Predicted Median House Value" },
+          height: 650
+        },
+        { displayModeBar: false }
+      );
+    });
+}
+
+
+
+const select = document.getElementById("featureSelect");
+
+select.addEventListener("change", e => {
+  loadSimulation(e.target.value);
+});
+
+// initial load
+loadSimulation(select.value);
+
+
+
+const awsBox = document.getElementById("awsStatus");
+
+function updateAwsStatus() {
+  fetch(`${API_BASE}/health`)
+    .then(res => {
+      if (!res.ok) throw new Error("Backend not OK");
+      return res.json();
+    })
+    .then(() => {
+      awsBox.innerText = "☁️ Live on AWS — FastAPI is running";
+      awsBox.style.cursor = "pointer";
+
+      awsBox.onclick = () => {
+        window.open(`${API_BASE}/docs`, "_blank");
+      };
+    })
+    .catch(() => {
+      awsBox.innerText = "⚠️ Backend not reachable";
+      awsBox.style.background = "#d90007";
+      awsBox.style.cursor = "default";
+      awsBox.onclick = null;
+    });
+}
+
+
+
+window.onload = () => {
+  updateAwsStatus();
+  // 2️⃣ Test samples
+  fetch(`${API_BASE}/test-data`)
+    .then(res => res.json())
+    .then(data => {
+      testSamples = data.samples;
+      const select = document.getElementById("test-sample");
+
+      testSamples.forEach((sample, idx) => {
+        const option = document.createElement("option");
+        option.value = idx;
+        option.text = `Sample ${idx + 1}`;
+        select.add(option);
+      });
+
+      // İlk sample seçildiğinde alt satırda göstermek
+      if (testSamples.length > 0) {
+        const firstSample = testSamples[0];
+        const { median_house_value, ...features } = firstSample;
+        document.getElementById("predictedBox").innerText = "—";
+        document.getElementById("realBox").innerText = "$" + median_house_value.toFixed(0);
+      }
+    });
+};
+
+
+
+  
+document.getElementById("predictTestBtn").addEventListener("click", () => {
+  const idx = document.getElementById("test-sample").value;
+  const selectedSample = testSamples[idx];
+  const { median_house_value, ...features } = selectedSample;
+
+  console.log("GÖNDERİLEN FEATURES:", features);
+
+  fetch(`${API_BASE}/predict`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(features)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Backend error");
+    }
+    return response.json();
+  })
+  .then(json => {
+
+    console.log("BACKEND RESPONSE:", json);
+
+    document.getElementById("predictedBox").innerText =
+      "$" + Number(json.predicted_price).toFixed(0);
+
+    document.getElementById("realBox").innerText =
+      "$" + median_house_value.toFixed(0);
+
+    const inputBox = document.getElementById("modelInputBox");
+    inputBox.innerHTML = "";
+
+    Object.entries(json.model_input).forEach(([key, value]) => {
+      inputBox.innerHTML += `<div><strong>${key}</strong>: ${value}</div>`;
+    });
+
+  })
+  .catch(error => {
+    console.error("Prediction error:", error);
+    document.getElementById("predictedBox").innerText = "Error";
+  });
+
+});
+
+
+
+function checkOrientation() {
+  const warning = document.getElementById("rotateWarning");
+  if (window.innerHeight > window.innerWidth && window.innerWidth < 900) {
+    warning.style.display = "flex";
+  } else {
+    warning.style.display = "none";
+  }
+}
+
+window.addEventListener("resize", checkOrientation);
+window.addEventListener("load", checkOrientation);
+
+
+
+
+
+</script>
+
+</body>
+</html>
