@@ -7,7 +7,7 @@ This is a demo project for exploring and predicting housing prices in California
 - **Machine Learning Model:** Pretrained model predicting median house values
 - **Data:** California Housing dataset
 
-Use this link to access the site directly: http://aws-ml-alb-1793301098.us-east-1.elb.amazonaws.com/
+Use this link to access the site directly: http://13.218.169.155
 ---
 
 ## Features
