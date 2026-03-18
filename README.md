@@ -1,5 +1,11 @@
 # California Housing ML Dashboard
 
+## 👤 Author
+
+Ülkü Ece Kuşçu
+
+---
+
 This is a demo project for exploring and predicting housing prices in California using machine learning. It demonstrates a full-stack deployment using:
 
 - **Frontend:** Static dashboard hosted on [GitHub Pages](https://ueceu.github.io/California-Housing-ML/)
